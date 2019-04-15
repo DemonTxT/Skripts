@@ -1,0 +1,61 @@
+#
+#   █▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀
+#   ▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀
+#   █▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀
+#						Skript de AntPalavras
+#							Version: 1.5
+
+#	Dependências:					
+#										
+#		SkQuery							
+#		Skript dev 36 +
+#		Skript-yaml						
+
+
+on enable:
+	load yaml "plugins/Srantchat_config/config.yml" as "antchat_config" 
+	if yaml "antchat_config" is empty:
+		set the comments at the top of "antchat_config" to "" and "█▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀" and "▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀" and "█▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀" and "				Version: 1.0" and ""
+		set yaml list "Mensagens.Formato da Mensagem Para o Jogador" from "antchat_config" to "" and "&cVocê não pode enviar esse tipo de mensagem em nosso servidor." and "@avisos / 2" and ""
+		set yaml value "Mensagens.Kick" from "antchat_config" to "Você foi kicado do servidor por que falou muitas palavras inapropriadas"
+		set the comments of yaml node "Mensagens" from "antchat_config" to "Mensagem quando o jogador mandar um link sem ter permissão" and "Mensagem para a staff quando um jogador mandar um link sem permissão"
+		set yaml value "Palavras.Total de Avisos" from "antchat_config" to 2
+		set yaml list "Palavras.BlackList" from "antchat_config" to ".host"
+		set the comments of yaml node "Palavras" from "antchat_config" to "Coloque todas os ips que você quiser. funciona também colocar" and "apenas uma parte deles tais como: jogar. ou .com" and "Todas as menssagens que tiverem algumas dessas palavras serão bloqueadas"
+		save yaml "antchat_config"
+	send "" to console
+	send "&fSrantchat_config - &aAtivado" to console
+	send "&fVersão: &e1.5" to console 
+	send "&fAutor: &eSrBlecaute" to console
+	send "" to console
+
+on disable:
+	unload yaml "antchat_config"
+
+on chat:
+	if sender is not console:
+		if player does not have permission "palavra.bypass": 
+			set {_m} to message
+			if checkChat(sender, {_m}) is true:
+				cancel event
+
+on command:
+	if sender is not console:
+		if player does not have permission "palavra.bypass": 
+			set {_m} to arguments 
+			if checkChat(sender, {_m}) is true:
+				cancel event
+
+function replace(msg: text, replace: text) :: text:
+	set {_replaces::*} to {_replace} split at "||"
+	loop {_replaces::*}:
+		set {_values::*} to loop-value split at ":"
+		replace all "%{_values::1}%" in {_msg} with "%{_values::2}%"
+	return {_msg}
+
+function checkChat(p: player, msg: text) :: boolean:
+	loop yaml list "Palavras.BlackList" from "antchat_config":
+		if "%{_msg}%" contains "%loop-value%":
+			loop yaml list "Mensagens.Formato da Mensagem Para o Jogador" from "antchat_config":
+				send colored replace("%loop-value-2%","@avisos:%{_count}%") to {_p}
+			return true
