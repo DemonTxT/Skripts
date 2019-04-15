@@ -1,0 +1,74 @@
+#
+#   █▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀
+#   ▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀
+#   █▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀
+#	
+
+#			
+#	dependências							skript permite teleportar 
+#											jogadores que estão ao seu redor ou 
+#		Skript-yaml							ao redor de outros jogadores.
+#		Skript dev 36+					
+#		SkQuery							
+
+on enable:
+	load yaml "plugins/tpBR/config.yml" as "tpconfig"
+	if yaml "tpconfig" is empty:
+		set yaml value "Mensagens.Sem Permissão" from "tpconfig" to "você não tem permissão para fazer isso. "
+		set yaml value "Mensagens.Comando Inválido" from "tpconfig" to "comando inválido por favor tente /tpr [<radios>] [<jogador>] "
+		set yaml value "Mensagens.Jogadores Foram Teleportados" from "tpconfig" to "Foram teleportados @quantia de jogadores em um raio de @raio para o jogador @player "
+		set yaml value "Mensagens.Sem Jogadores ao Redor" from "tpconfig" to "Não há nenhum jogador em um raio de @raio para serem teleportados até o jogador @player "
+		set yaml value "Mensagens.Número Incorreto" from "tpconfig" to "Por favor insira um número válido. "
+		set yaml value "Mensagens.Jogador não Encontrado" from "tpconfig" to "Esse jogador não está online ou não foi encontrado. "
+		set yaml value "Mensagens.Número Muito Alto" from "tpconfig" to "esse número é mais alto que o permitido. "
+		set yaml value "Permissão" from "tpconfig" to "tpr.use"
+		set yaml value "Opções.Limite dos Radius" from "tpconfig" to 300
+		save yaml "tpconfig"
+	send "" to console
+	send "&fTpBR   - &aAtivado" to console
+	send "&fVersão - &e1.0" to console 
+	send "&fAutor  - &eSrBlecaute" to console
+	send "" to console
+
+on disalbe:
+	unload yaml "tpconfig"
+
+command /tpr [<text>] [<offline player>]:
+	executable by: players
+	trigger:
+		if sender has permission yaml value "Permissão" from "tpconfig":
+			if arg 1 is set:
+				if (arg 1 parsed as num) is set:
+					set {_n} to arg 1 parsed as num 
+					if {_n} <= (yaml value "Opções.Limite dos Radius" from "tpconfig" parsed as integer): 
+						if arg 2 is set:
+							if arg 2 is online:
+								set {_i} to 0
+								loop players in radius {_n} around player:
+									if loop-value is not sender:
+										add 1 to {_i}
+										teleport loop-value to location at arg 2
+								if {_i} > 0:
+									send colored replace(yaml value "Mensagens.Jogadores Foram Teleportados" from "tpconfig","@quantia:%{_i}%||@raio:%{_n}%||@player:%arg 2%") 
+								else:
+									send colored replace(yaml value "Mensagens.Sem Jogadores ao Redor" from "tpconfig","@raio:%{_n}%||@player:%player%") 
+							else:
+								send colored yaml value "Mensagens.Jogador não Encontrado" from "tpconfig"
+						else:
+							set {_i} to 0
+							loop players in radius {_n} around player:
+								if loop-value is not sender:
+									add 1 to {_i}
+									teleport loop-value to location at player 
+							if {_i} > 0:
+								send colored replace(yaml value "Mensagens.Jogadores Foram Teleportados" from "tpconfig","@quantia:%{_i}%||@raio:%{_n}%||@player:%sender%") 
+							else:
+								send colored replace(yaml value "Mensagens.Sem Jogadores ao Redor" from "tpconfig","@raio:%{_n}%||@player:%sender%") 
+					else:
+						send colored yaml value "Mensagens.Número Muito Alto" from "tpconfig"
+				else:
+					send colored yaml value "Mensagens.Número Incorreto" from "tpconfig"
+			else:
+				send colored yaml value "Mensagens.Comando Inválido" from "tpconfig"
+		else:
+			send colored yaml value "Mensagens.Sem Permissão" from "tpconfig"
