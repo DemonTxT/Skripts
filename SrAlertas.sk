@@ -45,10 +45,8 @@ command /alerta [<text>]:
 					send all players title colored replace(yaml value "Mensagens.Tela do Jogador.Titulo" from "sralertas","@player:%sender%") with subtitle colored replace(yaml value "Mensagens.Tela do Jogador.SubTitulo" from "sralertas","@player:%sender%")
 			else:
 				send yaml value "Mensagens.Comando Errado" from "sralertas"
-				stop
 		else:
 			send yaml value "Mensagens.Sem Permissão" from "sralertas"
-			stop
 
 function replace(msg: text, replacing: text) :: text:
 	set {_splitStart::*} to {_replacing} split at "||"
