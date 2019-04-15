@@ -1,0 +1,58 @@
+#
+#   █▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀
+#   ▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀
+#   █▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀
+#						Skript de Alertas
+#							Version: 1.3
+
+#
+#	Dependências:
+#
+#	Skript dev 36 +		SkRayFall
+#	SkQuery				Skript-yaml
+
+on enable:
+	load yaml "plugins/SrAlertas/config.yml" as "sralertas"
+	if yaml "sralertas" is empty:
+		set the comments at the top of "sralertas" to "" and "█▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀" and "▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀" and "█▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀" and "				Version: 1.3" and ""
+		set yaml value "Mensagens.Sem Permissão" from "sralertas" to "&cVocê não tem permissão para executar esse comando ! "
+		set yaml value "Mensagens.Comando Errado" from "sralertas" to "&cUtilzie /alerta <mensagem> "
+		set yaml value "Mensagens.Aviso Enviado" from "sralertas" to "&aSeu aviso foi enviado para todos do servidor ! "
+		set yaml list "Mensagens.Formato" from "sralertas" to "" and "&8(&4!&8) &cALERTA: &f@msg " and ""
+		set yaml value "Mensagens.Tela do Jogador.Ativado" from "sralertas" to true
+		set yaml value "Mensagens.Tela do Jogador.Titulo" from "sralertas" to "&c&lALERTA "
+		set yaml value "Mensagens.Tela do Jogador.SubTitulo" from "sralertas" to "&7Por: @player"
+		set the comments of yaml node "Efeito Sonoro" from "sralertas" to "Caso esteja true ao ser enviado uma mensagem" and "os jogadores receberão um som de explosão"
+		save yaml "sralertas"
+	send "" to console
+	send "&fSrAlertas -  &aAtivado" to console
+	send "&fVersão    -  &e1.3" to console 
+	send "&fAutor     -  &eSrBlecaute" to console
+	send "" to console
+
+on disable:
+    unload yaml "sralertas"
+
+command /alerta [<text>]:
+	executable by: players and console
+	aliases: /alertar, /aviso, /avisar
+	trigger:
+		if sender has permission "alerta.admin":
+			if arg 1 is set:
+				loop yaml list "Mensagens.Formato" from "sralertas":
+					broadcast colored replace("%loop-value%","@msg:%arg 1%")
+				if yaml value "Mensagens.Tela do Jogador.Ativado" from "sralertas" is true:
+					send all players title colored replace(yaml value "Mensagens.Tela do Jogador.Titulo" from "sralertas","@player:%sender%") with subtitle colored replace(yaml value "Mensagens.Tela do Jogador.SubTitulo" from "sralertas","@player:%sender%")
+			else:
+				send yaml value "Mensagens.Comando Errado" from "sralertas"
+				stop
+		else:
+			send yaml value "Mensagens.Sem Permissão" from "sralertas"
+			stop
+
+function replace(msg: text, replacing: text) :: text:
+	set {_splitStart::*} to {_replacing} split at "||"
+	loop {_splitStart::*}:
+		set {_splitEnd::*} to loop-value split at ":"
+		replace all "%{_splitEnd::1}%" in {_msg} with "%{_splitEnd::2}%"
+	return {_msg}
