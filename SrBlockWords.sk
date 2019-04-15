@@ -13,7 +13,7 @@
 
 
 on enable:
-	load yaml "plugins/Srantchat_config/config.yml" as "antchat_config" 
+	load yaml "plugins/SrBlockWords/config.yml" as "antchat_config" 
 	if yaml "antchat_config" is empty:
 		set the comments at the top of "antchat_config" to "" and "█▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀" and "▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀" and "█▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀" and "				Version: 1.0" and ""
 		set yaml list "Mensagens.Formato da Mensagem Para o Jogador" from "antchat_config" to "" and "&cVocê não pode enviar esse tipo de mensagem em nosso servidor." and "@avisos / 2" and ""
