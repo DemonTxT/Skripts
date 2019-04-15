@@ -1,0 +1,108 @@
+#
+#   █▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀
+#   ▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀
+#   █▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀
+#						Skript de Fertilizante
+#							Version: 3.5.7
+
+#	Dependências:						
+#										
+#		SkQuery							
+#		Skript dev 36 +
+#		Skript-yaml		
+#		TuSKe	
+
+on enable:
+	load yaml "plugins/SrFertilazer/config.yml" as "fertilazer_config"
+	if yaml "fertilazer_config" is empty:
+		set yaml value "Permissões.Givar Fertilizante" from "fertilazer_config" to "givefert.admin"
+		set yaml value "Mensagens.Sem Permissão" from "fertilazer_config" to "&cVocê não tem permissão para fazer isso! "
+		set yaml value "Mensagens.Comando Errado" from "fertilazer_config" to "&7Comando Errado utilize /darfertilizador <Quantidade> <Jogador> " 
+		set yaml value "Mensagens.Numero Invalido" from "fertilazer_config" to "&cPor favor insira um número válido! "
+		set yaml value "Mensagens.Jogador Offline" from "fertilazer_config" to "&cEsse jogador não foi encontrado! " 
+		set yaml value "Mensagens.Usou Fertilizante" from "fertilazer_config" to "&eVocê usou o fertilizador com sucesso suas plantações foram crescidas. Está na hora da colheita ! "
+		set yaml value "Mensagens.Givou Fertilizante.Para outro jogador" from "fertilazer_config" to "&aVocê deu @quantidade de fertilizador pro jogador(a) @jogador "
+		set yaml value "Mensagens.Givou Fertilizante.Para si mesmo" from "fertilazer_config" to "&aVocê pegou @quantidade fertilizadores com sucesso! "
+		set yaml value "Fertilazer.Nome" from "fertilazer_config" to "&eFertilizador"
+		set yaml value "Fertilazer.Distancia" from "fertilazer_config" to 10
+		set yaml list "Fertilazer.Lore" from "fertilazer_config" to "Use esse item para suas plantações crescerem ao redor de você"
+		set yaml list "Fertilazer.Quais Plantas" from "fertilazer_config" to "nether wart "
+		save yaml "fertilazer_config"
+	send "" to console
+	send "&fSrFertilazer - &aAtivado" to console
+	send "&fVersão: &e1.0" to console 
+	send "&fAutor: &eSrBlecaute" to console
+	send "" to console
+
+on disable:
+	unload yaml "fertilazer_config"
+
+command /givefert [<text>] [<offline player>]:
+	aliases: /darfertilizador, /darfert, /givefertilizador
+	executable by: players
+	trigger:
+		if sender has permission yaml value "Permissões.Givar Fertilizante" from "fertilazer_config":
+			if arg 1 is set:
+				if arg 1 parsed as num is set:
+					if arg 2 is set:
+						if arg 2 is online:
+							set {_n} to arg 1 parsed as num 
+							set {_nome} to yaml value "Fertilazer.Nome" of file "plugins/FertilazerSK/config.yml"
+							send replace(yaml value "Mensagens.Givou Fertilizante.Para outro jogador" from "fertilazer_config", "@quantidade:%{_n}%||@jogador:%arg 2%")
+							loop {_n} times:
+								give 1 bone meal named colored "%{_nome}%" with lore colored getLore("Fertilazer.Lore","fertilazer_config") to arg 2 parsed as player 
+						else:
+							send yaml value "Mensagens.Jogador Offline" from "fertilazer_config"
+					else:
+						set {_n} to arg 1 parsed as num 
+						set {_nome} to yaml value "Fertilazer.Nome" of file "plugins/FertilazerSK/config.yml"
+						send replace(yaml value "Mensagens.Givou Fertilizante.Para si mesmo" from "fertilazer_config", "@quantidade:%{_n}%")
+						loop {_n} times:
+							give 1 bone meal named colored "%{_nome}%" with lore colored getLore("Fertilazer.Lore","fertilazer_config") to sender
+				else:
+					send yaml value "Mensagens.Numero Invalido" from "fertilazer_config"
+			else:
+				send yaml value "Mensagens.Comando Errado" from "fertilazer_config"
+		else:
+			send yaml value "Mensagens.Sem Permissão" from "fertilazer_config"
+
+
+on rightclick holding bone meal:
+	if name of tool of player is colored yaml value "Fertilazer.Nome" from "fertilazer_config":
+		set {_lore} to colored getLore("Fertilazer.Lore","fertilazer_config")
+		if lore of tool of player contains colored "%{_lore}%":
+			open virtual chest inventory with size 3 named "&7Usar Fertilizador" to player 
+			wait 5 tick
+			format a gui slot 11 of player with red wool named "&c&lCANCELAR" to close
+			format a gui slot 15 of player with green wool named "&a&lCONFIRMAR" to close then run:
+				set {_nome} to yaml value "Fertilazer.Nome" from "fertilazer_config"
+				set {_lore} to colored getLore("Fertilazer.Lore","fertilazer_config")
+				remove 1 bone meal named colored "%{_nome}%" with lore colored "%{_lore}%" from inventory of player 
+				send yaml value "Mensagens.Usou Fertilizante" from "fertilazer_config"
+				set {_distancia} to yaml value "Fertilazer.Distancia" from "fertilazer_config" 
+				set {_distancia} to {_distancia} parsed as num
+				set {_blocos::*} to yaml list "Fertilazer.Quais Plantas" from "fertilazer_config"
+				loop all blocks in radius {_distancia} around player: 
+					loop {_blocos::*}:
+						if loop-value-1 is loop-value-2 parsed as itemtype:
+							if loop-value-1 is nether wart:
+								if data value of nether wart is 0 or 1 or 2:
+									set data value of loop-value-1 to 3
+							else:
+								if data value of loop-value-1 is 0 or 1 or 2 or 3 or 4 or 5 or 6:
+									set data value of loop-value-1 to 7
+
+function getLore(caminho: text, file: text) :: text:
+	loop yaml list "%{_caminho}%" from "%{_file}%"
+		if {_lore} is not set:
+			set {_lore} to loop-value 
+		else:
+			set {_lore} to "%{_lore}%||%loop-value%"
+	return {_lore}
+
+function replace(msg: text, replace: text) :: text:
+	set {_replaces::*} to {_replace} split at "||"
+	loop {_replaces::*}:
+		set {_values::*} to loop-value split at ":"
+		replace all "%{_values::1}%" in {_msg} with "%{_values::2}%"
+	return {_msg}
