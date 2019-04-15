@@ -1,0 +1,173 @@
+#
+#   █▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀
+#   ▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀
+#   █▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀
+#
+# Skript de AntFly Basics ;)									Dependências
+#
+#																	- SkRayFall
+#		#	obs: esse skript bloqueia o fly 						- SkQuery
+#		 em regiões ou mundos e so permite voar						- Skript dev 36 +
+#		 quem tem a permissão.										- Plugin de Região.	
+#																
+
+on load:
+	load yaml "plugins/SrAntFly/config.yml" as "antfly_config"
+	load yaml "plugins/SrAntFly/data.yml" as "antfly_data"
+	if yaml "antfly_config" is empty:
+		set the comments at the top of "antfly_config" to "" and "█▀▀▀█ █▀▀█ █▀▀█ █░░ █▀▀ █▀▀ █▀▀█ █░░█ ▀▀█▀▀ █▀▀" and "▀▀▀▄▄ █▄▄▀ █▀▀▄ █░░ █▀▀ █░░ █▄▄█ █░░█ ░░█░░ █▀▀" and "█▄▄▄█ ▀░▀▀ █▄▄█ ▀▀▀ ▀▀▀ ▀▀▀ ▀░░▀ ░▀▀▀ ░░▀░░ ▀▀▀" and "				Version: 1.6" and ""
+		set yaml value "Mensagens.Sem Permissão" from "antfly_config" to "Você não tem permissão para fazer isso. "
+		set yaml value "Mensagens.Fly Desativado" from "antfly_config" to "O fly nesse local está desabilitado. "
+		set yaml value "Mensagens.Comando do Bloqueio Errado" from "antfly_config" to "Comando inválido por favor Utilize /bloquearfly [mundo | região] (nome da região). "
+		set yaml value "Mensagens.Comando do Desbloqueio Errado" from "antfly_config" to "Comando inválido por favor Utilize /desbloquearfly [mundo | região] (nome da região). "
+		set yaml value "Mensagens.Bloqueio do Fly" from "antfly_config" to "Fly foi bloqueado no(a) @local @region com sucesso! "
+		set yaml value "Mensagens.Desbloqueio do Fly" from "antfly_config" to "O Fly foi desbloqueado no(a) @local @region com sucesso! "
+		set yaml value "Mensagens.Local Inexistente" from "antfly_config" to "Esse local não existe em nossos arquivos. "
+		save yaml "antfly_config"
+	send "" to console
+	send "&fSrAntFly - &aAtivado" to console
+	send "&fVersão: &e1.0" to console 
+	send "&fAutor: &eSrBlecaute" to console
+	send "" to console
+
+command /bloquearfly [<text>] [<text>]:
+	trigger:
+		if sender has permission "adminfly.usar":
+			if arg 1 is set:
+				if arg 2 is set:
+					if arg 1 is "world" or "mundo" or "mundos":
+						set {_mundo} to arg 2
+						add "%{_mundo}%" to yaml list "Mundos Bloqueados" from "antfly_data"
+						set {_msg} to yaml value "Menssgens.Bloqueio do Fly" from "antfly_config"
+						replace all "@local" in {_msg} with "Mundo"
+						replace all "@region" in {_msg} with "%{_mundo}%"
+						send colored "%{_msg}%"
+						save yaml "antfly_data"
+						stop
+					else:
+						if arg 1 is "region" or "região" or "regiao" or "regiões" or "regioes":
+							set {_regiao} to arg 2
+							add "%{_regiao}%" to yaml list "Regiões Bloqueadas" from "antfly_data"
+							set {_msg} to yaml value "Mensagens.Bloqueio do Fly" from "antfly_config"
+							replace all "@local" in {_msg} with "Região"
+							replace all "@region" in {_msg} with "%{_regiao}%"
+							send colored "%{_msg}%"
+							save yaml "antfly_data"
+							stop
+						else:
+							send yaml value "Mensagens.Comando do Bloqueio Errado" from "antfly_config"
+							stop
+				else:
+					send yaml value "Mensagens.Comando do Bloqueio Errado" from "antfly_config"
+					stop
+			else:
+				send yaml value "Mensagens.Comando do Bloqueio Errado" from "antfly_config"
+				stop
+		else:
+			send colored yaml value "Mensagens.Sem Permissão" from "antfly_config"
+			stop
+
+command /desbloquearfly [<text>] [<text>]:
+	trigger:	
+		if sender has permission "adminfly.usar":
+			if arg 1 is set:
+				if arg 2 is set:
+					if arg 1 is "world" or "mundo" or "mundos":
+						set {_mundo} to arg 2
+						loop yaml list "Mundos Bloqueados" from "antfly_data":
+							if "%loop-value%" = "%{_mundo}%":
+								remove "%{_mundo}%" from yaml list "Mundos Bloqueados" in "antfly_data"
+								set {_msg} to yaml value "Menssagens.Desbloqueo Fly" from "antfly_config"
+								replace all "@local" in {_msg} with "Mundo"
+								replace all "@region" in {_msg} with "%{_mundo}%"
+								send colored "%{_msg}%" 
+								set {_boolean} to true
+								save yaml "antfly_data"
+						wait 20 tick 
+						if {_boolean} is true:
+							send colored yaml value "Mensagens.Local Inexistente" from "antfly_config"
+							stop
+					else:
+						if arg 1 is "region" or "região" or "regiao" or "regiões" or "regioes":
+							set {_region} to arg 2
+							loop yaml list "Regiões Bloqueadas" from "antfly_data":
+								if "%loop-value%" = "%{_region}%":
+									remove "%{_region}%" from yaml list "Regiões Bloqueadas" in "antfly_data"
+									set {_msg} to yaml value "Menssagens.Desbloqueo Fly" from "antfly_config"
+									replace all "@local" in {_msg} with "Região"
+									replace all "@region" in {_msg} with "%{_region}%"
+									send colored "%{_msg}%" 
+									set {_boolean} to true
+									save yaml "antfly_data"
+									stop
+							wait 20 tick 
+							if {_boolean} is true:
+								send colored yaml value "Mensagens.Local Inexistente" from "antfly_config"
+						else:
+							send yaml value "Mensagens.Comando do Desbloqueio Errado" from "antfly_config"
+							stop
+				else:
+					send yaml value "Mensagens.Comando do Desbloqueio Errado" from "antfly_config"
+					stop
+			else:
+				send yaml value "Mensagens.Comando do Desbloqueio Errado" from "antfly_config"
+				stop
+		else:
+			send colored yaml value "Mensagens.Sem Permissão" from "antfly_config"
+			stop
+			
+command /flylista:
+	trigger:	
+		if sender has permission "adminfly.usar":	
+			if yaml path "Mundos Bloqueadas" from "antfly_data" has value:
+				send ""
+				send "    &eMundos Bloqueados"
+				send ""
+				loop yaml list "Mundos Bloqueadas" from "antfly_data":
+					send "&a✔ &7%loop-value%" to player
+			else:
+				send "&cO fly não foi bloqueado em nenhum mundo"
+			wait 5 tick
+			if yaml path "Regiões Bloqueadas" from "antfly_data" has value:
+				send ""
+				send "    &eRegiões Bloqueadas"
+				send ""
+				loop yaml list "Regiões Bloqueadas" from "antfly_data":
+					send "&a✔ &7%loop-value%" to player
+			else:
+				send "&cO fly não foi bloqueado em nenhuma região"
+		else:
+			send colored yaml value "Mensagens.Sem Permissão" from "antfly_config"
+			stop
+
+on region enter:
+	set {_region} to "%region%"
+	if CheckRegion(player, {_region}, "Regiões Bloqueadas") is true:
+		set the player's fly mode to false
+		
+on region leave:
+	set {_region} to "%region%"
+	if CheckRegion(player, {_region}, "Regiões Bloqueadas") is true:
+		set the player's fly mode to false
+
+on flight toggle:
+	set {_mundo} to "%player's world%"
+	if CheckRegion(player, {_mundo}, "Mundos Bloqueados") is true:
+		set the player's fly mode to false
+		send colored yaml value "Mensagens.Fly Desativado" from "antfly_config"
+		cancel event
+		stop
+	else:
+		set {_region} to "%region at player%"
+		if CheckRegion(player, {_region}, "Regiões Bloqueadas") is true:
+			send colored yaml value "Mensagens.Fly Desativado" from "antfly_config"
+			set the player's fly mode to false
+			cancel event
+			stop
+
+function CheckRegion(p: player, region: text, caminho: text) :: boolean:
+	loop yaml list "%{_caminho}%" from "antfly_data":
+		if "%{_region}%" contains "%loop-value%":
+			if {_p} does not have permission "bypassfly.usar":
+				return true
+	return false
